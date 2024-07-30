@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5001:5000"
+    volumes:
+        - ./tracking:/app/tracking
+    environment:
+        - FLASK_APP=tracking.app:app
+        - FLASK_ENV=development
+        - MONGO_URI=mongodb://root:example@mongodb:27017/
+        - PYTHONPATH=/app
+
+
+
+  tests:
+    build: .
+    volumes:
+      - ./tracking:/app/tracking
+      - ./tests:/app/tests
+    environment:
+      FLASK_APP: tracking.app:app
+      FLASK_ENV: testing
+      MONGO_URI: mongodb://root:example@mongodb:27017/
+      PYTHONPATH: /app
+    command: ["pytest", "tests/test_visit_repository.py", "-s", "--disable-warnings", "--log-cli-level=DEBUG"]
+
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=root
+      - ME_CONFIG_BASICAUTH_PASSWORD=example
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
+      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongodb:27017/
+    ports:
+      - "8083:8081"
+
+volumes:
+    mongo-data:
